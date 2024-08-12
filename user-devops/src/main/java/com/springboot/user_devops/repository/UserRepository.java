@@ -6,5 +6,7 @@ import com.springboot.user_devops.model.User;
 
 public interface UserRepository extends JpaRepository<User, Long>{
 	
-
+	 User findFirstByEmail(String email);
+	 
+	// User findFirstByUsername(String username);
 }
