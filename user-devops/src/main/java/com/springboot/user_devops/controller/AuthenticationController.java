@@ -4,6 +4,8 @@ package com.springboot.user_devops.controller;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -36,20 +38,20 @@ public class AuthenticationController {
     private UserService userService;
 
     @PostMapping("/authenticate")
-    public AuthenticationResponse createAuthenticationToken(@RequestBody AuthenticationDTO authenticationDTO, HttpServletResponse response) throws BadCredentialsException, DisabledException, UsernameNotFoundException, IOException {
+    public ResponseEntity<AuthenticationResponse> createAuthenticationToken(@RequestBody AuthenticationDTO authenticationDTO, HttpServletResponse response) throws BadCredentialsException, DisabledException, UsernameNotFoundException, IOException {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationDTO.getEmail(), authenticationDTO.getPassword()));
-        } catch (BadCredentialsException e) {
-            throw new BadCredentialsException("Incorrect username or password!");
-        } catch (DisabledException disabledException) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "User is not activated");
-            return null;
-        }
+        	Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationDTO.getUsername(), authenticationDTO.getPassword()));
+    		SecurityContextHolder.getContext().setAuthentication(authentication);
+         } catch (BadCredentialsException e) {
+        	System.out.println("Taca");
+            //throw new BadCredentialsException("Incorrect username or password!");
+        	//response.sendError(HttpServletResponse.SC_NOT_FOUND, "User is not found!");
+        	return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+         }
 
-        final UserDetails userDetails = userService.loadUserByUsername(authenticationDTO.getEmail());
+        final UserDetails userDetails = userService.loadUserByUsername(authenticationDTO.getUsername());
         final String jwt = jwtUtil.generateToken(userDetails.getUsername());
-        return new AuthenticationResponse(jwt);
-
+        return ResponseEntity.ok(new AuthenticationResponse(jwt));
     }
 
 }
